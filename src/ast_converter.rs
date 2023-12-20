@@ -896,18 +896,7 @@ impl<'a> AstConverter<'a> {
                     let expression = self.make_table_expression(table)?;
                     self.expressions.push(expression.into());
                 }
-                /*
-                    ConvertWork::MakeBinaryExpression { operator } => {
-                    let left = self.pop_expression()?;
-                    let right = self.pop_expression()?;
-                    let mut binary =
-                        BinaryExpression::new(self.convert_binop(operator)?, left, right);
-                    if self.hold_token_data {
-                        binary.set_token(self.convert_token(get_binary_operator_token(operator)?)?);
-                    }
-                    self.expressions.push(binary.into());
-                }
-                 */
+
                 ConvertWork::MakeLuaxElementExpression {element} => {
                     let opening_element = {
                         let name = match element.opening_element.name {
@@ -957,36 +946,20 @@ impl<'a> AstConverter<'a> {
                         None
                     };
 
-                    let children = element.children.iter().map(|child| match child {
-                        ast::LuaxChild::Expression(child) => {
-                            let expression = self.pop_expression()?;
-                            Ok(LuaxChild::Expression(LuaxExpression::new(expression)))
-                        },
-                        ast::LuaxChild::Element(child) => {
-                            let expression = self.pop_expression()?;
-                            Ok(match expression {
-                                Expression::LuaxElement(element) => {
-                                    LuaxChild::Element(element)
-                                },
-                                _ => {panic!("test")} //TODO: pass error
-                            })
-                        },
-                        ast::LuaxChild::Fragment(child) => {
-                            let expression = self.pop_expression()?;
-                            Ok(match expression {
-                                Expression::LuaxFragment(fragment) => {
-                                    LuaxChild::Fragment(fragment)
-                                },
-                                _ => {panic!("test")} //TODO: pass error
-                            })
-                        },
-                        _ => {panic!("test")} //TODO: pass error
-                    }).collect::<Result<Vec<LuaxChild>, _>>();
+                    let children = self.convert_luax_children(&element.children);
 
                     let mut luax_element = LuaxElement::new(opening_element, children?);
                     luax_element.set_closing_element(closing_element);
 
                     self.expressions.push(Expression::LuaxElement(luax_element).into()); //TODO jenny :)
+                }
+
+                ConvertWork::MakeLuaxFragmentExpression { fragment } => {
+                    let children = self.convert_luax_children(&fragment.children);
+
+                    let mut luax_fragment = LuaxFragment::new(children?);
+
+                    self.expressions.push(Expression::LuaxFragment(luax_fragment).into()); //TODO jenny :)
                 }
 
                 ConvertWork::MakeAssignStatement { statement } => {
@@ -1420,7 +1393,6 @@ impl<'a> AstConverter<'a> {
 
                     self.type_packs.push(type_pack);
                 }
-                ConvertWork::MakeLuaxFragmentExpression { fragment } => todo!(),
             }
         }
 
@@ -2434,6 +2406,34 @@ impl<'a> AstConverter<'a> {
         }
 
         Ok(())
+    }
+
+    fn convert_luax_children( &mut self, children: &'a Vec<ast::LuaxChild>) -> Result<Vec<LuaxChild>, ConvertError> {
+        children.iter().map(|child| match child {
+            ast::LuaxChild::Expression(child) => {
+                let expression = self.pop_expression()?;
+                Ok(LuaxChild::Expression(LuaxExpression::new(expression)))
+            },
+            ast::LuaxChild::Element(child) => {
+                let expression = self.pop_expression()?;
+                Ok(match expression {
+                    Expression::LuaxElement(element) => {
+                        LuaxChild::Element(element)
+                    },
+                    _ => {panic!("test")} //TODO: pass error
+                })
+            },
+            ast::LuaxChild::Fragment(child) => {
+                let expression = self.pop_expression()?;
+                Ok(match expression {
+                    Expression::LuaxFragment(fragment) => {
+                        LuaxChild::Fragment(fragment)
+                    },
+                    _ => {panic!("test")} //TODO: pass error
+                })
+            },
+            _ => {panic!("test")} //TODO: pass error
+        }).collect::<Result<Vec<LuaxChild>, _>>()
     }
 
     fn push_maybe_variadic_type(&mut self, type_info: &'a ast::types::TypeInfo) {
