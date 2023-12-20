@@ -45,11 +45,11 @@ impl LuaxConverter{
 
         let name = FieldExpression::new(Prefix::from_name(Identifier::new("React")), Identifier::new("Fragment"));
         
-        let emptyAttributes = Expression::nil();
+        let empty_attributes = Expression::nil();
 
         let arguments = Arguments::default();
         arguments.with_argument(name);
-        arguments.with_argument(emptyAttributes);
+        arguments.with_argument(empty_attributes);
         arguments.with_argument(children);
 
         let method = Some(Identifier::new("createElement"));
@@ -65,7 +65,7 @@ impl LuaxConverter{
     fn convert_luax_attributes_to_table_expression(&self, attributes: &Vec<LuaxAttribute>) -> Option<TableExpression> {
         let entries = attributes.iter().map(|attribute: &LuaxAttribute| {
             match attribute.name {
-                Variable::Identifier(identifier) => TableEntry::from((TableFieldEntry::new(identifier, attribute.value))),
+                Variable::Identifier(identifier) => TableEntry::from(TableFieldEntry::new(identifier, attribute.value)),
                 Variable::Field(field) => TableEntry::from(TableIndexEntry::new( Expression::Field(field), attribute.value)),
                 Variable::Index(_) => todo!(),
             }
@@ -86,38 +86,39 @@ impl LuaxConverter{
         Some(TableExpression::new(entries))
     }
 
-    fn process_luax_element(&mut self, expression: &mut Expression) {
-        // let function: Option<FunctionCall> = if let Expression::LuaxElement(element) = expression {
-        //     self.convert_luax_element_to_function_call(element).map(Into::into)
+    // fn process_luax_element(&mut self, expression: &mut Expression) {
+    //     // let function: Option<FunctionCall> = if let Expression::LuaxElement(element) = expression {
+    //     //     self.convert_luax_element_to_function_call(element).map(Into::into)
 
-        // } else {
-        //     None
-        // }
-        // if let Expression::LuaxElement(element) = expression {
-        //     self.convert_luax_element_to_function_call(&element).map(Into::into)
-        // } else {
-        //     None
-        // };
-        // if let Some(mut function) = function {
-        //     mem::swap(element, &mut function);
-        // }
-    }
+    //     // } else {
+    //     //     None
+    //     // }
+    //     // if let Expression::LuaxElement(element) = expression {
+    //     //     self.convert_luax_element_to_function_call(&element).map(Into::into)
+    //     // } else {
+    //     //     None
+    //     // };
+    //     // if let Some(mut function) = function {
+    //     //     mem::swap(element, &mut function);
+    //     // }
+    // }
 
-    fn process_luax_fragment(&mut self, fragment: &mut LuaxFragment) {
-        //TODO process fragment
-        // mem::swap(fragment, &mut self.convert_luax_fragment_to_function_call(fragment).unwrap().into());
-    }
+    // fn process_luax_fragment(&mut self, fragment: &mut LuaxFragment) {
+    //     //TODO process fragment
+    //     // mem::swap(fragment, &mut self.convert_luax_fragment_to_function_call(fragment).unwrap().into());
+    // }
 
-    fn process_luax_children(&mut self, expression: &mut Vec<LuaxChild>) {
-        //TODO process children
-    }
+    // fn process_luax_children(&mut self, expression: &mut Vec<LuaxChild>) {
+    //     //TODO process children
+    // }
 }
 
 impl NodeProcessor for LuaxConverter {
     fn process_expression(&mut self, expression: &mut Expression) {
         let function: Option<Expression> = if let Expression::LuaxElement(element) = expression {
             self.convert_luax_element_to_function_call(element).map(Into::into)
-
+        } else if let Expression::LuaxFragment(element) = expression {
+            self.convert_luax_fragment_to_function_call(element).map(Into::into)
         } else {
             None
         };

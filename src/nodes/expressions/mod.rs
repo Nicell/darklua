@@ -43,6 +43,7 @@ pub enum Expression {
     Field(Box<FieldExpression>),
     Function(FunctionExpression),
     LuaxElement(LuaxElement),
+    LuaxFragment(LuaxFragment),
     Identifier(Identifier),
     If(Box<IfExpression>),
     Index(Box<IndexExpression>),

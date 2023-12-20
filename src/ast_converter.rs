@@ -909,38 +909,86 @@ impl<'a> AstConverter<'a> {
                 }
                  */
                 ConvertWork::MakeLuaxElementExpression {element} => {
-                    let open_element = self.pop_lua_opening_element()?;
-                    let close_element = self.pop_lua_closing_element()?;
+                    let opening_element = {
+                        let name = match element.opening_element.name {
+                            ast::Var::Expression(expression) => {
+                                self.pop_variable()?
+                            },
+                            ast::Var::Name(name) => {
+                                let name = self.convert_token_to_identifier(&name)?;
+                                Variable::Identifier(name)
+                            },
+                            _ => {panic!("test")} //TODO: pass error
+                        };
+
+                        let attributes = element.opening_element.attributes.iter().map(|attribute| {
+                            let name = match attribute.name {
+                                ast::Var::Expression(expression) => {
+                                    self.pop_variable()?
+                                },
+                                ast::Var::Name(name) => {
+                                    let name = self.convert_token_to_identifier(&name)?;
+                                    Variable::Identifier(name)
+                                },
+                                _ => {panic!("test")} //TODO: pass error
+                            };
+
+                            let value = self.pop_expression()?;
+
+                            Ok(LuaxAttribute::new(name, value))
+                        }).collect::<Result<Vec<_>, _>>()?;
+
+                        LuaxOpeningElement::new(name, attributes)
+                    };
+
+                    let closing_element = if element.opening_element.self_closing.is_none() {
+                        match element.closing_element.unwrap().name {
+                            ast::Var::Expression(expression) => {
+                                let var = self.pop_variable()?;
+                                Some(LuaxClosingElement::new(var))
+                            },
+                            ast::Var::Name(name) => {
+                                let name = self.convert_token_to_identifier(&name)?;
+                                Some(LuaxClosingElement::new(Variable::Identifier(name)))
+                            },
+                            _ => {panic!("test")} //TODO: pass error
+                        }
+                    } else {
+                        None
+                    };
 
                     let children = element.children.iter().map(|child| match child {
-                        ast::LuaxChild::Expression(child) => {},
+                        ast::LuaxChild::Expression(child) => {
+                            let expression = self.pop_expression()?;
+                            Ok(LuaxChild::Expression(LuaxExpression::new(expression)))
+                        },
                         ast::LuaxChild::Element(child) => {
                             let expression = self.pop_expression()?;
-                            match expression {
+                            Ok(match expression {
                                 Expression::LuaxElement(element) => {
                                     LuaxChild::Element(element)
                                 },
-                                _ => {panic!("test");} //TODO: pass error
-                            }
+                                _ => {panic!("test")} //TODO: pass error
+                            })
                         },
-                        ast::LuaxChild::Fragment(child) => {},
-                        _ => {} //TODO: pass error
-                    }).collect();
+                        ast::LuaxChild::Fragment(child) => {
+                            let expression = self.pop_expression()?;
+                            Ok(match expression {
+                                Expression::LuaxFragment(fragment) => {
+                                    LuaxChild::Fragment(fragment)
+                                },
+                                _ => {panic!("test")} //TODO: pass error
+                            })
+                        },
+                        _ => {panic!("test")} //TODO: pass error
+                    }).collect::<Result<Vec<LuaxChild>, _>>();
 
-                    let mut luax_element = LuaxElement::new(open_converted, children);
-                    luax_element.set_closing_element(close_converted);
+                    let mut luax_element = LuaxElement::new(opening_element, children?);
+                    luax_element.set_closing_element(closing_element);
 
-                    //let expression = self.make_luax_element_expression(element)?;
                     self.expressions.push(Expression::LuaxElement(luax_element).into()); //TODO jenny :)
                 }
-                ConvertWork::MakeLuaxExpression { expression } => {
-                    let expression = self.pop_expression()?;
-                    self.lua_children.push(LuaxChild::Expression(LuaxExpression::new(expression)));
-                }
-                // ConvertWork::MakeLuaxFragmentExpression { fragment } => {
-                //     let expression = self.make_luax_fragment_expression(fragment)?;
-                //     self.expressions.push(expression.into());
-                // }
+
                 ConvertWork::MakeAssignStatement { statement } => {
                     let variables = self.pop_variables(statement.variables().len())?;
                     let values = self.pop_expressions(statement.expressions().len())?;
@@ -1372,6 +1420,7 @@ impl<'a> AstConverter<'a> {
 
                     self.type_packs.push(type_pack);
                 }
+                ConvertWork::MakeLuaxFragmentExpression { fragment } => todo!(),
             }
         }
 
@@ -1624,16 +1673,48 @@ impl<'a> AstConverter<'a> {
     }
 
     fn convert_luax_element(&mut self, element: &'a ast::LuaxElement) -> Result<(), ConvertError> {
-        self.work_stack.push(ConvertWork::MakeLuaxOpeningElement {
-            opening_element: element.opening_element,
-        });
-        self.work_stack.push(ConvertWork::MakeLuaxClosingElement {
-            closing_element: element.closing_element,
-        });
+        // self.work_stack.push(ConvertWork::MakeLuaxOpeningElement {
+        //     opening_element: element.opening_element,
+        // });
+
+        match element.opening_element.name {
+            ast::Var::Expression(expression) => {
+                self.work_stack.push(ConvertWork::MakeVariable{variable: &expression})
+            }
+            ast::Var::Name(name) => {}
+            _ => {}
+        }
+
+        for attribute in element.opening_element.attributes.iter() {
+            match attribute.name {
+                ast::Var::Expression(expression) => {
+                    self.work_stack.push(ConvertWork::MakeVariable{variable: &expression})
+                }
+                ast::Var::Name(name) => {}
+                _ => {}
+            }
+            self.push_work(&attribute.value);
+        }
+
+        if element.opening_element.self_closing.is_none() {
+            //self.work_stack.push(ConvertWork::MakeVar{element.closing_element.unwrap()});
+
+            match element.closing_element.unwrap().name {
+                ast::Var::Expression(expression) => {
+                    self.work_stack.push(ConvertWork::MakeVariable{variable: &expression})
+                }
+                ast::Var::Name(name) => {}
+                _ => {}
+            }
+            // self.work_stack.push(ConvertWork::MakeVariable {
+            //     variable: element.closing_element.unwrap().name,
+            // });
+        }
+        
         for child in element.children.iter() {
             match child {
                 ast::LuaxChild::Expression(expression) => {
-                    self.work_stack.push(ConvertWork::MakeLuaxExpression { expression });
+                    self.push_work(&expression.expression)
                 }
                 ast::LuaxChild::Element(element) => {
                     self.work_stack.push(ConvertWork::MakeLuaxElementExpression { element })
@@ -1741,17 +1822,17 @@ impl<'a> AstConverter<'a> {
         }
         Ok(expression)
     }
-    fn convert_opening_element(&mut self,  opening_element: &'a ast::LuaxOpeningElement) -> Result<(), ConvertError> {
-        let attributes = opening_element.attributes.iter().map(|attribute| {
-            let mut attribute = LuaxAttribute::new(
-                    self.convert_token_to_identifier(attribute.name)?,
-                    self.pop_expression()?,
-                );
-            attribute
-        }).collect();
-        let mut name = &opening_element.name;
-        self.convert_variable(name);
-        let opening = LuaxOpeningElement::new(name, attributes);
+    // fn convert_opening_element(&mut self,  opening_element: &'a ast::LuaxOpeningElement) -> Result<(), ConvertError> {
+    //     let attributes = opening_element.attributes.iter().map(|attribute| {
+    //         let mut attribute = LuaxAttribute::new(
+    //                 self.convert_token_to_identifier(attribute.name)?,
+    //                 self.pop_expression()?,
+    //             );
+    //         attribute
+    //     }).collect();
+    //     let mut name = &opening_element.name;
+    //     self.convert_variable(name);
+    //     let opening = LuaxOpeningElement::new(name, attributes);
         // for field in table.fields() {
         //     match field {
         //         ast::Field::ExpressionKey {
@@ -1779,46 +1860,46 @@ impl<'a> AstConverter<'a> {
         //             })
         //         }
         //     }
-        // }
-        Ok(())
-    }
-    #[cfg_attr(feature = "tracing", tracing::instrument(level = "trace", skip_all))]
-    fn make_luax_element_expression(
-        &mut self,
-        element: &ast::LuaxElement,
-    ) -> Result<LuaxElement, ConvertError> {
-        let attributes = element.opening_element.attributes.iter().map(|attribute| {
-            let mut attribute = LuaxAttribute::new(
-                self.convert_token_to_identifier(attribute.name)?,
-                self.pop_expression()?,
-            );
-            // if self.hold_token_data {
-            //     attribute.set_token(self.convert_token(attribute.equal_token())?);
-            // }
-            attribute
-        }).collect();
-        let mut name = &element.opening_element.name;
-        self.convert_variable(name);
-        let opening = LuaxOpeningElement::new(name, attributes);
-        opening.set_self_closing(Token::new(element.opening_element.self_closing));
-        let element = LuaxElement::new(opening, element.children);
-        // if self.hold_token_data {
-        //     element.set_token(self.convert_token(element.element_token())?);
-        // }
-        Ok(element)
-    }
+    //     // }
+    //     Ok(())
+    // }
+    // #[cfg_attr(feature = "tracing", tracing::instrument(level = "trace", skip_all))]
+    // fn make_luax_element_expression(
+    //     &mut self,
+    //     element: &ast::LuaxElement,
+    // ) -> Result<LuaxElement, ConvertError> {
+    //     let attributes = element.opening_element.attributes.iter().map(|attribute| {
+    //         let mut attribute = LuaxAttribute::new(
+    //             self.convert_token_to_identifier(attribute.name)?,
+    //             self.pop_expression()?,
+    //         );
+    //         // if self.hold_token_data {
+    //         //     attribute.set_token(self.convert_token(attribute.equal_token())?);
+    //         // }
+    //         attribute
+    //     }).collect();
+    //     let mut name = &element.opening_element.name;
+    //     self.convert_variable(name);
+    //     let opening = LuaxOpeningElement::new(name, attributes);
+    //     opening.set_self_closing(Token::new(element.opening_element.self_closing));
+    //     let element = LuaxElement::new(opening, element.children);
+    //     // if self.hold_token_data {
+    //     //     element.set_token(self.convert_token(element.element_token())?);
+    //     // }
+    //     Ok(element)
+    //}
 
-    #[cfg_attr(feature = "tracing", tracing::instrument(level = "trace", skip_all))]
-    fn make_luax_fragment_expression(
-        &mut self,
-        fragment: &ast::LuaxFragment,
-    ) -> Result<LuaxFragment, ConvertError> {
-        let mut expression = LuaxFragment::new(self.pop_expression()?);
-        if self.hold_token_data {
-            expression.set_token(self.convert_token(fragment.fragment_token())?);
-        }
-        Ok(expression)
-    }
+    // #[cfg_attr(feature = "tracing", tracing::instrument(level = "trace", skip_all))]
+    // fn make_luax_fragment_expression(
+    //     &mut self,
+    //     fragment: &ast::LuaxFragment,
+    // ) -> Result<LuaxFragment, ConvertError> {
+    //     let mut expression = LuaxFragment::new(self.pop_expression()?);
+    //     if self.hold_token_data {
+    //         expression.set_token(self.convert_token(fragment.fragment_token())?);
+    //     }
+    //     Ok(expression)
+    // }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(level = "trace", skip_all))]
     fn make_function_call(
@@ -1910,11 +1991,6 @@ impl<'a> AstConverter<'a> {
         }
 
         Ok(prefix)
-    }
-
-    fn convert_luax_expression(&mut self, luax_expression: &'a ast::LuaxExpression) -> Result<(), ConvertError> {
-        self.work_stack.push(ConvertWork::Expression(&luax_expression.expression));
-        Ok(())
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(level = "trace", skip_all))]
@@ -3028,9 +3104,6 @@ enum ConvertWork<'a> {
     },
     MakeLuaxElementExpression {
         element: &'a ast::LuaxElement,
-    },
-    MakeLuaxExpression {
-        expression: &'a ast::LuaxExpression,
     },
     MakeLuaxFragmentExpression {
         fragment: &'a ast::LuaxFragment,

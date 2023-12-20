@@ -26,8 +26,8 @@ impl LuaxElement {
     }
 
     #[inline]
-    pub fn set_closing_element(&self, closing: LuaxClosingElement) {
-        self.closing_element = Some(closing);
+    pub fn set_closing_element(&self, closing: Option<LuaxClosingElement>) {
+        self.closing_element = closing;
     }
 
     #[inline]
