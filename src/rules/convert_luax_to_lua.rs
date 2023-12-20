@@ -159,28 +159,36 @@ impl RuleConfiguration for LuaxToLua {
 #[cfg(test)]
 mod test {
     use super::*;
-
-    use crate::rules::Rule;
-
-    use insta::assert_json_snapshot;
+    use crate::{
+        generator::{LuaGenerator, TokenBasedLuaGenerator},
+        rules::{ContextBuilder},
+        Parser, Resources,
+    };
 
     fn new_rule() -> LuaxToLua {
         LuaxToLua::default()
     }
 
-    #[test]
-    fn serialize_default_rule() {
-        assert_json_snapshot!("convert_luax_to_lua", new_rule());
-    }
 
-    #[test]
-    fn configure_with_extra_field_error() {
-        let result = json5::from_str::<Box<dyn Rule>>(
-            r#"{
-            rule: 'convert_luax_to_lua',
-            prop: "something",
-        }"#,
+    #[test]    
+    fn convert_to_luax() {
+        let code = include_str!("../../tests/test_cases/simplejsx.lua");
+
+        let parser = Parser::default().preserve_tokens();
+
+        let mut block = parser.parse(code).expect("unable to parse code");
+
+        LuaxToLua::default().flawless_process(
+            &mut block,
+            &ContextBuilder::new(".", &Resources::from_memory(), code).build(),
         );
-        pretty_assertions::assert_eq!(result.unwrap_err().to_string(), "unexpected field 'prop'");
+
+        let mut generator = TokenBasedLuaGenerator::new(code);
+
+        generator.write_block(&block);
+
+        let code_output = &generator.into_string();
+
+        insta::assert_snapshot!("convert_to_luax", code_output);
     }
 }

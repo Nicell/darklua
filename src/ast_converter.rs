@@ -899,7 +899,7 @@ impl<'a> AstConverter<'a> {
 
                 ConvertWork::MakeLuaxElementExpression {element} => {
                     let opening_element = {
-                        let name = match element.opening_element.name {
+                        let name = match &element.opening_element.name {
                             ast::Var::Expression(expression) => {
                                 self.pop_variable()?
                             },
@@ -911,7 +911,7 @@ impl<'a> AstConverter<'a> {
                         };
 
                         let attributes = element.opening_element.attributes.iter().map(|attribute| {
-                            let name = match attribute.name {
+                            let name = match &attribute.name {
                                 ast::Var::Expression(expression) => {
                                     self.pop_variable()?
                                 },
@@ -921,7 +921,7 @@ impl<'a> AstConverter<'a> {
                                 },
                                 _ => {panic!("test")} //TODO: pass error
                             };
-
+å
                             let value = self.pop_expression()?;
 
                             Ok(LuaxAttribute::new(name, value))
@@ -931,7 +931,7 @@ impl<'a> AstConverter<'a> {
                     };
 
                     let closing_element = if element.opening_element.self_closing.is_none() {
-                        match element.closing_element.unwrap().name {
+                        match element.closing_element.clone().unwrap().name {
                             ast::Var::Expression(expression) => {
                                 let var = self.pop_variable()?;
                                 Some(LuaxClosingElement::new(var))
@@ -1649,7 +1649,7 @@ impl<'a> AstConverter<'a> {
         //     opening_element: element.opening_element,
         // });
 
-        match element.opening_element.name {
+        match &element.opening_element.name {
             ast::Var::Expression(expression) => {
                 self.work_stack.push(ConvertWork::MakeVariable{variable: &expression})
             }
@@ -1658,7 +1658,7 @@ impl<'a> AstConverter<'a> {
         }
 
         for attribute in element.opening_element.attributes.iter() {
-            match attribute.name {
+            match &attribute.name {
                 ast::Var::Expression(expression) => {
                     self.work_stack.push(ConvertWork::MakeVariable{variable: &expression})
                 }
