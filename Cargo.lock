@@ -578,7 +578,7 @@ dependencies = [
 [[package]]
 name = "full_moon"
 version = "0.19.0"
-source = "git+https://github.com/Nicell/full-moon?branch=luax#c1621897b85d23a1a87c6806a4a55dc8658e8cb2"
+source = "git+https://github.com/Nicell/full-moon?branch=luax#d45daaba5c237eb9722b741a06bb7e88285805f7"
 dependencies = [
  "bytecount",
  "cfg-if 1.0.0",
@@ -594,7 +594,7 @@ dependencies = [
 [[package]]
 name = "full_moon_derive"
 version = "0.11.0"
-source = "git+https://github.com/Nicell/full-moon?branch=luax#c1621897b85d23a1a87c6806a4a55dc8658e8cb2"
+source = "git+https://github.com/Nicell/full-moon?branch=luax#d45daaba5c237eb9722b741a06bb7e88285805f7"
 dependencies = [
  "indexmap",
  "proc-macro2",

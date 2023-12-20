@@ -6,6 +6,7 @@ mod call_parens;
 mod compute_expression;
 mod configuration_error;
 mod convert_index_to_field;
+mod convert_luax_to_lua;
 mod convert_require;
 mod empty_do;
 mod filter_early_return;
@@ -35,6 +36,7 @@ pub use call_parens::*;
 pub use compute_expression::*;
 pub use configuration_error::RuleConfigurationError;
 pub use convert_index_to_field::*;
+pub use convert_luax_to_lua::*;
 pub use convert_require::*;
 pub use empty_do::*;
 pub use filter_early_return::*;
@@ -249,6 +251,7 @@ impl FromStr for Box<dyn Rule> {
             APPEND_TEXT_COMMENT_RULE_NAME => Box::<AppendTextComment>::default(),
             COMPUTE_EXPRESSIONS_RULE_NAME => Box::<ComputeExpression>::default(),
             CONVERT_INDEX_TO_FIELD_RULE_NAME => Box::<ConvertIndexToField>::default(),
+            CONVERT_LUAX_TO_LUA_RULE_NAME => Box::<ConvertLuaxToLua>::default(),
             CONVERT_LOCAL_FUNCTION_TO_ASSIGN_RULE_NAME => {
                 Box::<ConvertLocalFunctionToAssign>::default()
             }

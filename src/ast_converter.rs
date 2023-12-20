@@ -896,6 +896,14 @@ impl<'a> AstConverter<'a> {
                     let expression = self.make_table_expression(table)?;
                     self.expressions.push(expression.into());
                 }
+                ConvertWork::MakeLuaxElementExpression { element } => {
+                    let expression = self.make_luax_element_expression(element)?;
+                    self.expressions.push(expression.into());
+                }
+                ConvertWork::MakeLuaxFragmentExpression { fragment } => {
+                    let expression = self.make_luax_fragment_expression(fragment)?;
+                    self.expressions.push(expression.into());
+                }
                 ConvertWork::MakeAssignStatement { statement } => {
                     let variables = self.pop_variables(statement.variables().len())?;
                     let values = self.pop_expressions(statement.expressions().len())?;
@@ -1672,6 +1680,84 @@ impl<'a> AstConverter<'a> {
         }
         Ok(expression)
     }
+    fn convert_opening_element(&mut self,  opening_element: &'a ast::LuaxOpeningElement) -> Result<(), ConvertError> {
+        let attributes = opening_element.attributes.iter().map(|attribute| {
+            let mut attribute = LuaxAttribute::new(
+                    self.convert_token_to_identifier(attribute.name)?,
+                    self.pop_expression()?,
+                );
+            attribute
+        }).collect();
+        let mut name = &opening_element.name;
+        self.convert_variable(name);
+        let opening = LuaxOpeningElement::new(name, attributes);
+        // for field in table.fields() {
+        //     match field {
+        //         ast::Field::ExpressionKey {
+        //             brackets: _,
+        //             key,
+        //             equal: _,
+        //             value,
+        //         } => {
+        //             self.push_work(key);
+        //             self.push_work(value);
+        //         }
+        //         ast::Field::NameKey {
+        //             key: _,
+        //             equal: _,
+        //             value,
+        //         } => {
+        //             self.push_work(value);
+        //         }
+        //         ast::Field::NoKey(value) => {
+        //             self.push_work(value);
+        //         }
+        //         _ => {
+        //             return Err(ConvertError::TableEntry {
+        //                 entry: field.to_string(),
+        //             })
+        //         }
+        //     }
+        // }
+        Ok(())
+    }
+    #[cfg_attr(feature = "tracing", tracing::instrument(level = "trace", skip_all))]
+    fn make_luax_element_expression(
+        &mut self,
+        element: &ast::LuaxElement,
+    ) -> Result<LuaxElement, ConvertError> {
+        let attributes = element.opening_element.attributes.iter().map(|attribute| {
+            let mut attribute = LuaxAttribute::new(
+                self.convert_token_to_identifier(attribute.name)?,
+                self.pop_expression()?,
+            );
+            // if self.hold_token_data {
+            //     attribute.set_token(self.convert_token(attribute.equal_token())?);
+            // }
+            attribute
+        }).collect();
+        let mut name = &element.opening_element.name;
+        self.convert_variable(name);
+        let opening = LuaxOpeningElement::new(name, attributes);
+        opening.set_self_closing(Token::new(element.opening_element.self_closing));
+        let element = LuaxElement::new(opening, element.children);
+        // if self.hold_token_data {
+        //     element.set_token(self.convert_token(element.element_token())?);
+        // }
+        Ok(element)
+    }
+
+    #[cfg_attr(feature = "tracing", tracing::instrument(level = "trace", skip_all))]
+    fn make_luax_fragment_expression(
+        &mut self,
+        fragment: &ast::LuaxFragment,
+    ) -> Result<LuaxFragment, ConvertError> {
+        let mut expression = LuaxFragment::new(self.pop_expression()?);
+        if self.hold_token_data {
+            expression.set_token(self.convert_token(fragment.fragment_token())?);
+        }
+        Ok(expression)
+    }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(level = "trace", skip_all))]
     fn make_function_call(
@@ -1813,6 +1899,16 @@ impl<'a> AstConverter<'a> {
                 self.work_stack
                     .push(ConvertWork::MakeTableExpression { table });
                 self.convert_table(table)?;
+            }
+            ast::Expression::LuaxElement(element) => {
+                self.work_stack
+                    .push(ConvertWork::MakeLuaxElementExpression { element });
+                self.convert_luax_element(element)?;
+            }
+            ast::Expression::LuaxFragment(fragment) => {
+                self.work_stack
+                    .push(ConvertWork::MakeLuaxFragmentExpression { fragment });
+                self.convert_luax_fragment(fragment)?;
             }
             ast::Expression::Number(number) => {
                 let mut expression = NumberExpression::from_str(&number.token().to_string())
@@ -2863,6 +2959,12 @@ enum ConvertWork<'a> {
     },
     MakeTableExpression {
         table: &'a ast::TableConstructor,
+    },
+    MakeLuaxElementExpression {
+        element: &'a ast::LuaxElement,
+    },
+    MakeLuaxFragmentExpression {
+        fragment: &'a ast::LuaxFragment,
     },
     MakeVariable {
         variable: &'a ast::VarExpression,

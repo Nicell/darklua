@@ -10,6 +10,7 @@ mod prefix;
 mod string;
 pub(crate) mod string_utils;
 mod table;
+mod luax;
 mod type_cast;
 mod unary;
 
@@ -25,6 +26,7 @@ pub use prefix::*;
 pub use string::*;
 pub use string_utils::StringError;
 pub use table::*;
+pub use luax::*;
 pub use type_cast::*;
 pub use unary::*;
 
