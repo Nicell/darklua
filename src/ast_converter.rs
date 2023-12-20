@@ -901,26 +901,26 @@ impl<'a> AstConverter<'a> {
                     let opening_element = {
                         let name = match element.opening_element.name {
                             ast::Var::Expression(expression) => {
-                                self.pop_variable()?
+                                Ok(self.pop_variable()?)
                             },
                             ast::Var::Name(name) => {
                                 let name = self.convert_token_to_identifier(&name)?;
-                                Variable::Identifier(name)
+                                Ok(Variable::Identifier(name))
                             },
-                            _ => {panic!("test")} //TODO: pass error
-                        };
+                            _ => {Err(ConvertError::Luax { luax: element.to_string() })} //TODO: pass error
+                        }?;
 
                         let attributes = element.opening_element.attributes.iter().map(|attribute| {
                             let name = match attribute.name {
                                 ast::Var::Expression(expression) => {
-                                    self.pop_variable()?
+                                    Ok(self.pop_variable()?)
                                 },
                                 ast::Var::Name(name) => {
                                     let name = self.convert_token_to_identifier(&name)?;
-                                    Variable::Identifier(name)
+                                    Ok(Variable::Identifier(name))
                                 },
-                                _ => {panic!("test")} //TODO: pass error
-                            };
+                                _ => {Err(ConvertError::Luax { luax: element.to_string() })} //TODO: pass error
+                            }?;
 
                             let value = self.pop_expression()?;
 
@@ -934,14 +934,14 @@ impl<'a> AstConverter<'a> {
                         match element.closing_element.unwrap().name {
                             ast::Var::Expression(expression) => {
                                 let var = self.pop_variable()?;
-                                Some(LuaxClosingElement::new(var))
+                                Ok(Some(LuaxClosingElement::new(var)))
                             },
                             ast::Var::Name(name) => {
                                 let name = self.convert_token_to_identifier(&name)?;
-                                Some(LuaxClosingElement::new(Variable::Identifier(name)))
+                                Ok(Some(LuaxClosingElement::new(Variable::Identifier(name))))
                             },
-                            _ => {panic!("test")} //TODO: pass error
-                        }
+                            _ => {Err(ConvertError::Luax { luax: element.to_string() })} //TODO: pass error
+                        }?
                     } else {
                         None
                     };
@@ -1669,7 +1669,6 @@ impl<'a> AstConverter<'a> {
         }
 
         if element.opening_element.self_closing.is_none() {
-            //self.work_stack.push(ConvertWork::MakeVar{element.closing_element.unwrap()});
 
             match element.closing_element.unwrap().name {
                 ast::Var::Expression(expression) => {
@@ -1678,9 +1677,6 @@ impl<'a> AstConverter<'a> {
                 ast::Var::Name(name) => {}
                 _ => {}
             }
-            // self.work_stack.push(ConvertWork::MakeVariable {
-            //     variable: element.closing_element.unwrap().name,
-            // });
         }
         
         for child in element.children.iter() {
@@ -2410,29 +2406,29 @@ impl<'a> AstConverter<'a> {
 
     fn convert_luax_children( &mut self, children: &'a Vec<ast::LuaxChild>) -> Result<Vec<LuaxChild>, ConvertError> {
         children.iter().map(|child| match child {
-            ast::LuaxChild::Expression(child) => {
+            ast::LuaxChild::Expression(e) => {
                 let expression = self.pop_expression()?;
                 Ok(LuaxChild::Expression(LuaxExpression::new(expression)))
             },
-            ast::LuaxChild::Element(child) => {
+            ast::LuaxChild::Element(element) => {
                 let expression = self.pop_expression()?;
                 Ok(match expression {
                     Expression::LuaxElement(element) => {
-                        LuaxChild::Element(element)
+                        Ok(LuaxChild::Element(element))
                     },
-                    _ => {panic!("test")} //TODO: pass error
-                })
+                    _ => {Err(ConvertError::Luax { luax: element.to_string() })} //TODO: pass error
+                }?)
             },
-            ast::LuaxChild::Fragment(child) => {
+            ast::LuaxChild::Fragment(fragment) => {
                 let expression = self.pop_expression()?;
                 Ok(match expression {
                     Expression::LuaxFragment(fragment) => {
-                        LuaxChild::Fragment(fragment)
+                        Ok(LuaxChild::Fragment(fragment))
                     },
-                    _ => {panic!("test")} //TODO: pass error
-                })
+                    _ => {Err(ConvertError::Luax { luax: fragment.to_string() })} //TODO: pass error
+                }?)
             },
-            _ => {panic!("test")} //TODO: pass error
+            _ => {Err(ConvertError::Luax { luax: child.to_string() })} //TODO: pass error
         }).collect::<Result<Vec<LuaxChild>, _>>()
     }
 
@@ -3282,6 +3278,9 @@ pub(crate) enum ConvertError {
     InternalStack {
         kind: &'static str,
     },
+    Luax {
+        luax: String,
+    },
 }
 
 impl fmt::Display for ConvertError {
@@ -3333,6 +3332,9 @@ impl fmt::Display for ConvertError {
                     "internal conversion stack expected to find an item of `{}`",
                     kind
                 )
+            }
+            ConvertError::Luax { luax } => {
+                return write!(f, "unable to convert luax from `{}`", luax)
             }
         };
         write!(f, "unable to convert {} from `{}`", kind, code)
