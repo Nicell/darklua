@@ -16,6 +16,7 @@ mod unary;
 
 pub use binary::*;
 pub use field::*;
+pub use luax::*;
 pub use function::*;
 pub use if_expression::*;
 pub use index::*;
@@ -41,6 +42,7 @@ pub enum Expression {
     False(Option<Token>),
     Field(Box<FieldExpression>),
     Function(FunctionExpression),
+    LuaxElement(LuaxElement),
     Identifier(Identifier),
     If(Box<IfExpression>),
     Index(Box<IndexExpression>),

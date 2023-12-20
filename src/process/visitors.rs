@@ -49,7 +49,7 @@ pub trait NodeVisitor<T: NodeProcessor> {
 
     fn visit_expression(expression: &mut Expression, processor: &mut T) {
         processor.process_expression(expression);
-
+        
         match expression {
             Expression::Binary(expression) => {
                 processor.process_binary_expression(expression);

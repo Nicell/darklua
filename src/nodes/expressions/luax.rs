@@ -3,10 +3,12 @@ use crate::{
     process::utils::is_valid_identifier,
 };
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+
 pub struct LuaxElement {
-    opening_element: LuaxOpeningElement,
-    children: Vec<LuaxChild>,
-    closing_element: Option<LuaxClosingElement>,
+    pub opening_element: LuaxOpeningElement,
+    pub children: Vec<LuaxChild>,
+    pub closing_element: Option<LuaxClosingElement>,
 }
 
 impl LuaxElement {
@@ -24,17 +26,22 @@ impl LuaxElement {
     }
 
     #[inline]
+    pub fn set_closing_element(&self, closing: LuaxClosingElement) {
+        self.closing_element = Some(closing);
+    }
+
+    #[inline]
     pub fn get_children(&self) -> &Vec<LuaxChild> {
         &self.children
     }
-} 
+ } 
 
-
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LuaxOpeningElement {
     // opening_bracket: Token,
-    name: Variable,
-    attributes: Vec<LuaxAttribute>,
-    self_closing: Option<Token>,
+    pub name: Variable,
+    pub attributes: Vec<LuaxAttribute>,
+    pub self_closing: Option<Token>,
     // closing_bracket: Token,
 }
 impl LuaxOpeningElement {
@@ -59,10 +66,11 @@ impl LuaxOpeningElement {
         &self.attributes
     }
 }
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LuaxClosingElement {
     // opening_bracket: Token,
     // slash: Token,
-    name: Variable,
+    pub name: Variable,
     // closing_bracket: Token,
 }
 impl LuaxClosingElement {
@@ -77,10 +85,11 @@ impl LuaxClosingElement {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 
 pub struct LuaxAttribute {
-    name: Variable,
-    value: Expression,
+    pub name: Variable,
+    pub value: Expression,
 }
 
 impl LuaxAttribute {
@@ -100,11 +109,11 @@ impl LuaxAttribute {
         &self.value
     }
 }
-
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LuaxFragment {
-    opening_fragment: LuaxOpeningFragment,
-    children: Vec<LuaxChild>,
-    closing_fragment: LuaxClosingFragment,
+    pub opening_fragment: LuaxOpeningFragment,
+    pub children: Vec<LuaxChild>,
+    pub closing_fragment: LuaxClosingFragment,
 }
 
 impl LuaxFragment {
@@ -114,29 +123,50 @@ impl LuaxFragment {
         &self.children
     }
 }
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LuaxOpeningFragment {
-    opening_bracket: Token,
-    closing_bracket: Token,
+    pub opening_bracket: Token,
+    pub closing_bracket: Token,
 }
 impl LuaxOpeningFragment {
 
 }
 
-
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LuaxClosingFragment {
-    opening_bracket: Token,
-    slash: Token,
-    closing_bracket: Token,
+    pub opening_bracket: Token,
+    pub slash: Token,
+    pub closing_bracket: Token,
 }
 impl LuaxClosingFragment {
 
 }
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LuaxChild {
+    /// A Luax element
+    Element(LuaxElement),
 
-}
-impl LuaxChild {
+    /// A Luax fragment
+    Fragment(LuaxFragment),
 
+    /// An expression
+    Expression(LuaxExpression),
 }
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LuaxExpression {
+    // opening_brace: Token,
+    pub expression: Expression,
+    // closing_brace: Token,
+}
+
+impl LuaxExpression {
+    pub fn new(expression: Expression) -> Self {
+        Self {
+            expression: expression.into(),
+        }
+    }
+
+} 
 
 
 // impl TableFieldEntry {
