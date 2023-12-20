@@ -86,19 +86,26 @@ impl LuaxConverter{
         Some(TableExpression::new(entries))
     }
 
-    fn process_luax_element(&mut self, element: &mut LuaxElement) {
-        if let Expression::LuaxElement(element) = expression {
-            self.convert_luax_element_to_function_call(&element).map(Into::into)
-        } else {
-            None
-        };
-        if let Some(mut function) = function {
-            mem::swap(element, &mut function);
-        }
+    fn process_luax_element(&mut self, expression: &mut Expression) {
+        // let function: Option<FunctionCall> = if let Expression::LuaxElement(element) = expression {
+        //     self.convert_luax_element_to_function_call(element).map(Into::into)
+
+        // } else {
+        //     None
+        // }
+        // if let Expression::LuaxElement(element) = expression {
+        //     self.convert_luax_element_to_function_call(&element).map(Into::into)
+        // } else {
+        //     None
+        // };
+        // if let Some(mut function) = function {
+        //     mem::swap(element, &mut function);
+        // }
     }
 
     fn process_luax_fragment(&mut self, fragment: &mut LuaxFragment) {
-        mem::swap(fragment, &mut self.convert_luax_fragment_to_function_call(fragment).unwrap().into());
+        //TODO process fragment
+        // mem::swap(fragment, &mut self.convert_luax_fragment_to_function_call(fragment).unwrap().into());
     }
 
     fn process_luax_children(&mut self, expression: &mut Vec<LuaxChild>) {
@@ -108,12 +115,14 @@ impl LuaxConverter{
 
 impl NodeProcessor for LuaxConverter {
     fn process_expression(&mut self, expression: &mut Expression) {
-        match expression {
-            Expression::LuaxElement(expression) => {
-                self.process_luax_element(expression);
+        let function: Option<Expression> = if let Expression::LuaxElement(element) = expression {
+            self.convert_luax_element_to_function_call(element).map(Into::into)
 
-            }
-            _ => {}
+        } else {
+            None
+        };
+        if let Some(mut function) = function {
+            mem::swap(expression, &mut function);
         }
     }
 }
@@ -146,58 +155,32 @@ impl RuleConfiguration for LuaxToLua {
     }
 }
 
+
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{
-        generator::{LuaGenerator, TokenBasedLuaGenerator},
-        rules::{ContextBuilder, Rule},
-        Parser, Resources,
-    };
 
-    // use insta::assert_json_snapshot;
+    use crate::rules::Rule;
 
-    // fn new_rule() -> RemoveSpaces {
-    //     RemoveSpaces::default()
-    // }
+    use insta::assert_json_snapshot;
 
-    // #[test]
-    // fn serialize_default_rule() {
-    //     let rule: Box<dyn Rule> = Box::new(new_rule());
-
-    //     assert_json_snapshot!("default_remove_spaces", rule);
-    // }
-
-    // #[test]
-    // fn configure_with_extra_field_error() {
-    //     let result = json5::from_str::<Box<dyn Rule>>(
-    //         r#"{
-    //         rule: 'remove_spaces',
-    //         prop: "something",
-    //     }"#,
-    //     );
-    //     pretty_assertions::assert_eq!(result.unwrap_err().to_string(), "unexpected field 'prop'");
-    // }
+    fn new_rule() -> LuaxToLua {
+        LuaxToLua::default()
+    }
 
     #[test]
-    fn convert_luax_to_lua() {
-        let code = include_str!("TODO CHANGE THIS.lua");
+    fn serialize_default_rule() {
+        assert_json_snapshot!("convert_luax_to_lua", new_rule());
+    }
 
-        let parser = Parser::default().preserve_tokens();
-
-        let mut block = parser.parse(code).expect("unable to parse code");
-
-        LuaxToLua::default().flawless_process(
-            &mut block,
-            &ContextBuilder::new(".", &Resources::from_memory(), code).build(),
+    #[test]
+    fn configure_with_extra_field_error() {
+        let result = json5::from_str::<Box<dyn Rule>>(
+            r#"{
+            rule: 'convert_luax_to_lua',
+            prop: "something",
+        }"#,
         );
-
-        let mut generator = TokenBasedLuaGenerator::new(code);
-
-        generator.write_block(&block);
-
-        let code_output = &generator.into_string();
-
-        insta::assert_snapshot!("convert_luax_to_lua", code_output);
+        pretty_assertions::assert_eq!(result.unwrap_err().to_string(), "unexpected field 'prop'");
     }
 }

@@ -909,12 +909,20 @@ impl<'a> AstConverter<'a> {
                 }
                  */
                 ConvertWork::MakeLuaxElementExpression {element} => {
-                    let mut open_converted = self.convert_luax_opening(element.opening_element);
-                    let mut close_converted = self.convert_luax_closing(element.closing_element);
+                    let open_element = self.pop_lua_opening_element()?;
+                    let close_element = self.pop_lua_closing_element()?;
 
                     let children = element.children.iter().map(|child| match child {
                         ast::LuaxChild::Expression(child) => {},
-                        ast::LuaxChild::Element(child) => {},
+                        ast::LuaxChild::Element(child) => {
+                            let expression = self.pop_expression()?;
+                            match expression {
+                                Expression::LuaxElement(element) => {
+                                    LuaxChild::Element(element)
+                                },
+                                _ => {panic!("test");} //TODO: pass error
+                            }
+                        },
                         ast::LuaxChild::Fragment(child) => {},
                         _ => {} //TODO: pass error
                     }).collect();
@@ -1616,16 +1624,22 @@ impl<'a> AstConverter<'a> {
     }
 
     fn convert_luax_element(&mut self, element: &'a ast::LuaxElement) -> Result<(), ConvertError> {
+        self.work_stack.push(ConvertWork::MakeLuaxOpeningElement {
+            opening_element: element.opening_element,
+        });
+        self.work_stack.push(ConvertWork::MakeLuaxClosingElement {
+            closing_element: element.closing_element,
+        });
         for child in element.children.iter() {
             match child {
-                ast::LuaxChild::Expression(child) => {
-                    self.push_work(child);
+                ast::LuaxChild::Expression(expression) => {
+                    self.work_stack.push(ConvertWork::MakeLuaxExpression { expression });
                 }
-                ast::LuaxChild::Element(child) => {
-                    self.push_work(child);
+                ast::LuaxChild::Element(element) => {
+                    self.work_stack.push(ConvertWork::MakeLuaxElementExpression { element })
                 }
-                ast::LuaxChild::Fragment(child) => {
-                    self.push_work(child);
+                ast::LuaxChild::Fragment(fragment) => {
+                    self.work_stack.push(ConvertWork::MakeLuaxFragmentExpression { fragment })
                 }
                 _ => {} //TODO: pass error
             }
@@ -1899,7 +1913,7 @@ impl<'a> AstConverter<'a> {
     }
 
     fn convert_luax_expression(&mut self, luax_expression: &'a ast::LuaxExpression) -> Result<(), ConvertError> {
-        self.expression.push(luax_expression.expression.into());
+        self.work_stack.push(ConvertWork::Expression(&luax_expression.expression));
         Ok(())
     }
 
