@@ -116,6 +116,13 @@ pub struct LuaxFragment {
 }
 
 impl LuaxFragment {
+    pub fn new<E: Into<Vec<LuaxChild>>>(children: E) -> Self {
+        Self {
+            opening_fragment: LuaxOpeningFragment {},
+            children: children.into(),
+            closing_fragment: LuaxClosingFragment {},
+        }
+    }
 
     #[inline]
     pub fn get_children(&self) -> &Vec<LuaxChild> {
@@ -124,8 +131,7 @@ impl LuaxFragment {
 }
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LuaxOpeningFragment {
-    pub opening_bracket: Token,
-    pub closing_bracket: Token,
+
 }
 impl LuaxOpeningFragment {
 
@@ -133,9 +139,7 @@ impl LuaxOpeningFragment {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LuaxClosingFragment {
-    pub opening_bracket: Token,
-    pub slash: Token,
-    pub closing_bracket: Token,
+
 }
 impl LuaxClosingFragment {
 
