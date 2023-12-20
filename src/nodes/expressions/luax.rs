@@ -1,6 +1,5 @@
 use crate::{
-    nodes::{Expression, Identifier, Token, Variable},
-    process::utils::is_valid_identifier,
+    nodes::{Expression, Token, Variable},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -26,8 +25,8 @@ impl LuaxElement {
     }
 
     #[inline]
-    pub fn set_closing_element(&self, closing: Option<LuaxClosingElement>) {
-        self.closing_element = closing;
+    pub fn set_closing_element(&mut self, closing: LuaxClosingElement) {
+        self.closing_element = Some(closing);
     }
 
     #[inline]

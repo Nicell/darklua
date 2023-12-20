@@ -984,7 +984,7 @@ impl<'a> AstConverter<'a> {
                     }).collect::<Result<Vec<LuaxChild>, _>>();
 
                     let mut luax_element = LuaxElement::new(opening_element, children?);
-                    luax_element.set_closing_element(closing_element);
+                    luax_element.set_closing_element(closing_element.unwrap());
 
                     self.expressions.push(Expression::LuaxElement(luax_element).into()); //TODO jenny :)
                 }

@@ -2,8 +2,7 @@ use std::mem;
 
 
 use crate::nodes::{
-    Block, Expression, FieldExpression, FunctionCall, Identifier, Prefix, Arguments, Variable,
-    TypedIdentifier, TableExpression, LuaxElement, LuaxFragment, LuaxExpression, LuaxAttribute, LuaxChild, TableEntry, TableIndexEntry, TableFieldEntry
+    Block, Expression, FieldExpression, FunctionCall, Identifier, Prefix, Arguments, Variable, TableExpression, LuaxElement, LuaxFragment, LuaxExpression, LuaxAttribute, LuaxChild, TableEntry, TableIndexEntry, TableFieldEntry
 };
 use crate::process::{DefaultVisitor, NodeProcessor, NodeVisitor};
 use crate::rules::{

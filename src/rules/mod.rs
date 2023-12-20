@@ -251,7 +251,7 @@ impl FromStr for Box<dyn Rule> {
             APPEND_TEXT_COMMENT_RULE_NAME => Box::<AppendTextComment>::default(),
             COMPUTE_EXPRESSIONS_RULE_NAME => Box::<ComputeExpression>::default(),
             CONVERT_INDEX_TO_FIELD_RULE_NAME => Box::<ConvertIndexToField>::default(),
-            CONVERT_LUAX_TO_LUA_RULE_NAME => Box::<ConvertLuaxToLua>::default(),
+            CONVERT_LUAX_TO_LUA_RULE_NAME => Box::<LuaxToLua>::default(),
             CONVERT_LOCAL_FUNCTION_TO_ASSIGN_RULE_NAME => {
                 Box::<ConvertLocalFunctionToAssign>::default()
             }
