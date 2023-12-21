@@ -2,13 +2,14 @@ module.exports = {
   siteMetadata: {
     title: `darklua`,
     description: `Learn about Lua processing with darklua.`,
-    siteUrl: `https://darklua.com/`,
+    siteUrl: `https://nicell.github.io/darklua/`,
     social: {
       twitter: `jeparleRBX`,
     },
     groupsOrder: ["Guides", "Configuration", "Rules"],
     rulesGroup: "Rules",
   },
+  pathPrefix: "/darklua",
   plugins: [
     `gatsby-plugin-material-ui`,
     `gatsby-theme-material-ui`,
