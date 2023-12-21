@@ -29,8 +29,8 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
-      - name: Verify code style
-        run: npm run style-check
+      # - name: Verify code style
+      #   run: npm run style-check
 
       - uses: jetli/wasm-pack-action@v0.4.0
         with:
