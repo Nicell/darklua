@@ -3,10 +3,10 @@ name: Site
 on:
   push:
     branches:
-      - main
+      - luax
   pull_request:
     branches:
-      - main
+      - luax
 
 jobs:
   build-site:
@@ -63,7 +63,7 @@ jobs:
           wasm-pack build darklua-wasm -t bundler --release
 
       - uses: actions/cache@v3
-        if: github.ref != 'refs/heads/main'
+        if: github.ref != 'refs/heads/luax'
         with:
           path: |
             site/public/
@@ -84,7 +84,7 @@ jobs:
     name: Deploy darklua site
     runs-on: ubuntu-latest
     needs: build-site
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/luax'
 
     environment:
       name: github-pages
