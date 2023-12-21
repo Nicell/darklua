@@ -73,6 +73,8 @@ impl Evaluator {
             | Expression::Field(_)
             | Expression::Identifier(_)
             | Expression::Index(_)
+            | Expression::LuaxElement(_)
+            | Expression::LuaxFragment(_)
             | Expression::VariableArguments(_) => LuaValue::Unknown,
         }
     }
@@ -96,6 +98,8 @@ impl Evaluator {
             | Expression::String(_)
             | Expression::InterpolatedString(_)
             | Expression::Table(_)
+            | Expression::LuaxElement(_)
+            | Expression::LuaxFragment(_)
             | Expression::True(_) => false,
             Expression::TypeCast(type_cast) => {
                 self.can_return_multiple_values(type_cast.get_expression())
@@ -167,6 +171,8 @@ impl Evaluator {
                 .get_entries()
                 .iter()
                 .any(|entry| self.table_entry_has_side_effects(entry)),
+            Expression::LuaxElement(_)
+            | Expression::LuaxFragment(_) => true,
             Expression::Call(call) => self.call_has_side_effects(call),
             Expression::InterpolatedString(interpolated_string) => interpolated_string
                 .iter_segments()

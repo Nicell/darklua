@@ -84,6 +84,8 @@ pub trait LuaGenerator {
             Unary(unary) => self.write_unary_expression(unary),
             VariableArguments(token) => self.write_variable_arguments_expression(token),
             TypeCast(type_cast) => self.write_type_cast(type_cast),
+            LuaxElement(e) => todo!("write LuaxElement: {:?}", e),
+            LuaxFragment(f) => todo!("write LuaxFragment: {:?}", f),
         }
     }
 

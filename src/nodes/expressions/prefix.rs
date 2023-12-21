@@ -34,6 +34,8 @@ impl From<Expression> for Prefix {
             | Expression::String(_)
             | Expression::InterpolatedString(_)
             | Expression::Table(_)
+            | Expression::LuaxElement(_)
+            | Expression::LuaxFragment(_)
             | Expression::True(_)
             | Expression::TypeCast(_)
             | Expression::Unary(_)

@@ -1,0 +1,9 @@
+---
+source: src/rules/convert_luax_to_lua.rs
+expression: code_output
+---
+local comp = React.createElement(Component , {a=1, b=React.createElement(Child2 , {b=React.createElement(Child, {}, {})}, {React.createElement(Child5 , {c=6}, {})})}, {React.createElement(
+Child1, {}, {}), React.createElement(
+Child2, {}, {}), React.createElement(
+Child, {}, {}), React.createElement(
+Child3, {}, {})})

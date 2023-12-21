@@ -1,0 +1,7 @@
+---
+source: src/rules/convert_luax_to_lua.rs
+expression: code_output
+---
+return React.createElement(React.Fragment, nil, {React.createElement(
+Child1, {}, {}), React.createElement(
+Child2, {}, {}), React.createElement(React.Fragment, nil, {React.createElement(React.Fragment, nil, {})})})

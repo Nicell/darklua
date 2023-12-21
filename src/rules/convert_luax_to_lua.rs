@@ -1,8 +1,10 @@
 use std::mem;
 
 
+use full_moon::ast::Field;
+
 use crate::nodes::{
-    Block, Expression, FieldExpression, FunctionCall, Identifier, Prefix, Arguments, Variable, TableExpression, LuaxElement, LuaxFragment, LuaxExpression, LuaxAttribute, LuaxChild, TableEntry, TableIndexEntry, TableFieldEntry
+    Block, Expression, FieldExpression, FunctionCall, Identifier, Prefix, Arguments, Variable, TableExpression, LuaxElement, LuaxFragment, LuaxExpression, LuaxAttribute, LuaxChild, TableEntry, TableIndexEntry, TableFieldEntry, TupleArguments
 };
 use crate::process::{DefaultVisitor, NodeProcessor, NodeVisitor};
 use crate::rules::{
@@ -18,54 +20,42 @@ struct LuaxConverter {}
 impl LuaxConverter{ 
     fn convert_luax_element_to_function_call(&self, element: &LuaxElement) -> Option<FunctionCall>  {
         // Get name
-        let name = element.opening_element.name;
+        let name = element.opening_element.name.clone();
         // get attributes
         let attributes = self.convert_luax_attributes_to_table_expression(&element.opening_element.attributes);
         // get children
         let children = self.convert_luax_children_to_table_expression(&element.children);
         // Reconstruct Function Call
-        let arguments = Arguments::default();
-        arguments.with_argument(name);
-        arguments.with_argument(attributes);
-        arguments.with_argument(children);
+        let arguments = Arguments::Tuple(TupleArguments::new(vec![name.into(), attributes.into(), children.into()]));
 
-        let prefix = Prefix::from_name(Identifier::new("React"));
-
-        let method = Some(Identifier::new("createElement"));
-
+        let prefix = Prefix::Field(Box::new(FieldExpression::new(Prefix::from_name(Identifier::new("React")), Identifier::new("createElement"))));
         
-        return Some(FunctionCall::new(prefix, arguments, method));
+        return Some(FunctionCall::new(prefix, arguments, None));
     }
 
     fn convert_luax_fragment_to_function_call(&self, fragment: &LuaxFragment) -> Option<FunctionCall> {
         let children = self.convert_luax_children_to_table_expression(&fragment.children);
         
-        let prefix = Prefix::from_name(Identifier::new("React"));
+        let prefix = Prefix::Field(Box::new(FieldExpression::new(Prefix::from_name(Identifier::new("React")), Identifier::new("createElement"))));
 
         let name = FieldExpression::new(Prefix::from_name(Identifier::new("React")), Identifier::new("Fragment"));
         
         let empty_attributes = Expression::nil();
 
-        let arguments = Arguments::default();
-        arguments.with_argument(name);
-        arguments.with_argument(empty_attributes);
-        arguments.with_argument(children);
-
-        let method = Some(Identifier::new("createElement"));
-
+        let arguments = Arguments::Tuple(TupleArguments::new(vec![name.into(), empty_attributes.into(), children.into()]));
         
-        Some(FunctionCall::new(prefix, arguments, method))
+        Some(FunctionCall::new(prefix, arguments, None))
     } 
 
     fn convert_luax_expression_to_expression(&self, expression: &LuaxExpression) -> Option<Expression> {
-        Some(expression.expression)
+        Some(*expression.expression.clone())
     }
 
     fn convert_luax_attributes_to_table_expression(&self, attributes: &Vec<LuaxAttribute>) -> Option<TableExpression> {
         let entries = attributes.iter().map(|attribute: &LuaxAttribute| {
-            match attribute.name {
-                Variable::Identifier(identifier) => TableEntry::from(TableFieldEntry::new(identifier, attribute.value)),
-                Variable::Field(field) => TableEntry::from(TableIndexEntry::new( Expression::Field(field), attribute.value)),
+            match attribute.name.clone() {
+                Variable::Identifier(identifier) => TableEntry::from(TableFieldEntry::new(identifier, attribute.value.clone())),
+                Variable::Field(field) => TableEntry::from(TableIndexEntry::new( Expression::Field(field), attribute.value.clone())),
                 Variable::Index(_) => todo!(),
             }
         }).collect();
@@ -171,8 +161,8 @@ mod test {
 
 
     #[test]    
-    fn convert_to_luax() {
-        let code = include_str!("../../tests/test_cases/simplejsx.lua");
+    fn convert_from_luax() {
+        let code = include_str!("../../tests/test_cases/luax.lua");
 
         let parser = Parser::default().preserve_tokens();
 
@@ -190,5 +180,49 @@ mod test {
         let code_output = &generator.into_string();
 
         insta::assert_snapshot!("convert_to_luax", code_output);
+    }
+
+    #[test]
+    fn convert_from_luax_self_closing() {
+        let code = include_str!("../../tests/test_cases/luax_self_closing.lua");
+
+        let parser = Parser::default().preserve_tokens();
+
+        let mut block = parser.parse(code).expect("unable to parse code");
+
+        LuaxToLua::default().flawless_process(
+            &mut block,
+            &ContextBuilder::new(".", &Resources::from_memory(), code).build(),
+        );
+
+        let mut generator = TokenBasedLuaGenerator::new(code);
+
+        generator.write_block(&block);
+
+        let code_output = &generator.into_string();
+
+        insta::assert_snapshot!("convert_to_luax_self_closing", code_output);
+    }
+
+    #[test]
+    fn convert_from_luax_fragment() {
+        let code = include_str!("../../tests/test_cases/luax_fragment.lua");
+
+        let parser = Parser::default().preserve_tokens();
+
+        let mut block = parser.parse(code).expect("unable to parse code");
+
+        LuaxToLua::default().flawless_process(
+            &mut block,
+            &ContextBuilder::new(".", &Resources::from_memory(), code).build(),
+        );
+
+        let mut generator = TokenBasedLuaGenerator::new(code);
+
+        generator.write_block(&block);
+
+        let code_output = &generator.into_string();
+
+        insta::assert_snapshot!("convert_to_luax_fragment", code_output);
     }
 }

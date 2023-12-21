@@ -101,6 +101,8 @@ pub fn starts_with_table(mut expression: &Expression) -> Option<&TableExpression
                 expression = binary.left();
             }
             Expression::Call(_)
+            | Expression::LuaxElement(_)
+            | Expression::LuaxFragment(_)
             | Expression::False(_)
             | Expression::Field(_)
             | Expression::Function(_)
@@ -164,6 +166,8 @@ fn expression_ends_with_prefix(expression: &Expression) -> bool {
         | Expression::String(_)
         | Expression::InterpolatedString(_)
         | Expression::Table(_)
+        | Expression::LuaxElement(_)
+        | Expression::LuaxFragment(_)
         | Expression::True(_)
         | Expression::VariableArguments(_)
         | Expression::TypeCast(_) => false,

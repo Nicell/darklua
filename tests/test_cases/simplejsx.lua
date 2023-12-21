@@ -1,1 +1,0 @@
-local comp = <Component></Component>

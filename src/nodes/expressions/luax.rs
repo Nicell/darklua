@@ -25,8 +25,8 @@ impl LuaxElement {
     }
 
     #[inline]
-    pub fn set_closing_element(&mut self, closing: LuaxClosingElement) {
-        self.closing_element = Some(closing);
+    pub fn set_closing_element(&mut self, closing: Option<LuaxClosingElement>) {
+        self.closing_element = closing;
     }
 
     #[inline]
@@ -155,10 +155,11 @@ pub enum LuaxChild {
     /// An expression
     Expression(LuaxExpression),
 }
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LuaxExpression {
     // opening_brace: Token,
-    pub expression: Expression,
+    pub expression: Box<Expression>,
     // closing_brace: Token,
 }
 

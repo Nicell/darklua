@@ -43,6 +43,8 @@ fn ends_with_if_expression(expression: &Expression) -> bool {
             | Expression::Table(_)
             | Expression::True(_)
             | Expression::VariableArguments(_)
+            | Expression::LuaxElement(_)
+            | Expression::LuaxFragment(_)
             | Expression::TypeCast(_) => break false,
         }
     }
@@ -101,6 +103,8 @@ fn ends_with_type_cast_to_type_name_without_type_parameters(expression: &Express
             | Expression::InterpolatedString(_)
             | Expression::Table(_)
             | Expression::True(_)
+            | Expression::LuaxElement(_)
+            | Expression::LuaxFragment(_)
             | Expression::VariableArguments(_) => break false,
         }
     }

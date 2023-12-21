@@ -100,6 +100,8 @@ impl NodeProcessor for RemoveWhitespacesProcessor {
             | Expression::String(_)
             | Expression::InterpolatedString(_)
             | Expression::Table(_)
+            | Expression::LuaxElement(_)
+            | Expression::LuaxFragment(_)
             | Expression::Unary(_)
             | Expression::TypeCast(_) => {}
         }

@@ -334,6 +334,8 @@ fn last_expression_token(expression: &Expression) -> Option<&Token> {
         | Expression::VariableArguments(token) => token.as_ref(),
         Expression::Unary(unary) => last_expression_token(unary.get_expression()),
         Expression::TypeCast(type_cast) => last_type_token(type_cast.get_type()),
+        Expression::LuaxElement(_)
+        | Expression::LuaxFragment(_) => None,
     }
 }
 

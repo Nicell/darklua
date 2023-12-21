@@ -47,9 +47,18 @@ pub trait NodeVisitor<T: NodeProcessor> {
         };
     }
 
+    fn visit_luax_child(child: &mut LuaxChild, processor: &mut T) {
+        match child {
+            LuaxChild::Expression(expression) => Self::visit_expression(&mut expression.expression, processor),
+            LuaxChild::Element(element) => {
+                Self::visit_expression(&mut Expression::LuaxElement(element.clone()), processor)
+            }
+            LuaxChild::Fragment(fragment) => Self::visit_expression(&mut Expression::LuaxFragment(fragment.clone()), processor),
+        }
+    }
+
     fn visit_expression(expression: &mut Expression, processor: &mut T) {
         processor.process_expression(expression);
-        
         match expression {
             Expression::Binary(expression) => {
                 processor.process_binary_expression(expression);
@@ -90,6 +99,12 @@ pub trait NodeVisitor<T: NodeProcessor> {
 
                 Self::visit_expression(type_cast.mutate_expression(), processor);
                 Self::visit_type(type_cast.mutate_type(), processor);
+            }
+            Expression::LuaxFragment(fragment) => {
+                fragment.children.iter_mut().for_each(|child| Self::visit_luax_child(child, processor));
+            }
+            Expression::LuaxElement(element) => {
+                element.children.iter_mut().for_each(|child| Self::visit_luax_child(child, processor));
             }
             Expression::False(_)
             | Expression::Nil(_)

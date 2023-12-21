@@ -99,6 +99,8 @@ impl Processor {
                     | Expression::Index(_)
                     | Expression::Parenthese(_)
                     | Expression::Table(_)
+                    | Expression::LuaxElement(_)
+                    | Expression::LuaxFragment(_)
                     | Expression::TypeCast(_)
                     | Expression::Unary(_) => Some(self.generate_variable()),
                 };
