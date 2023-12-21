@@ -241,6 +241,7 @@ local testSuite = {
                 include_functions = true,
             },
             'remove_function_call_parens',
+            'convert_luax_to_lua'
         }
     }),
 }

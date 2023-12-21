@@ -213,6 +213,7 @@ pub fn get_default_rules() -> Vec<Box<dyn Rule>> {
         Box::<RemoveNilDeclaration>::default(),
         Box::<RenameVariables>::default(),
         Box::<RemoveFunctionCallParens>::default(),
+        Box::<LuaxToLua>::default(),
     ]
 }
 
@@ -221,6 +222,7 @@ pub fn get_all_rule_names() -> Vec<&'static str> {
         APPEND_TEXT_COMMENT_RULE_NAME,
         COMPUTE_EXPRESSIONS_RULE_NAME,
         CONVERT_INDEX_TO_FIELD_RULE_NAME,
+        CONVERT_LUAX_TO_LUA_RULE_NAME,
         CONVERT_LOCAL_FUNCTION_TO_ASSIGN_RULE_NAME,
         CONVERT_REQUIRE_RULE_NAME,
         FILTER_AFTER_EARLY_RETURN_RULE_NAME,

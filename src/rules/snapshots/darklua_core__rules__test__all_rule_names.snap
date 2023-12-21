@@ -6,6 +6,7 @@ expression: rule_names
   "append_text_comment",
   "compute_expression",
   "convert_index_to_field",
+  "convert_luax_to_lua",
   "convert_local_function_to_assign",
   "convert_require",
   "filter_after_early_return",

@@ -1,0 +1,5 @@
+---
+source: src/rules/convert_luax_to_lua.rs
+expression: rule
+---
+"convert_luax_to_lua"

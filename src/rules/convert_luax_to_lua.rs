@@ -117,7 +117,7 @@ impl NodeProcessor for LuaxConverter {
     }
 }
 
-pub const LUAX_TO_LUA_RULE_NAME: &str = "luax to lua";
+pub const CONVERT_LUAX_TO_LUA_RULE_NAME: &str = "convert_luax_to_lua";
 
 /// A rule that removes whitespaces associated with AST nodes.
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -137,7 +137,7 @@ impl RuleConfiguration for LuaxToLua {
     }
 
     fn get_name(&self) -> &'static str {
-        LUAX_TO_LUA_RULE_NAME
+        CONVERT_LUAX_TO_LUA_RULE_NAME
     }
 
     fn serialize_to_properties(&self) -> RuleProperties {
@@ -151,14 +151,24 @@ mod test {
     use super::*;
     use crate::{
         generator::{LuaGenerator, TokenBasedLuaGenerator},
-        rules::{ContextBuilder},
+        rules::ContextBuilder,
+        rules::Rule,
         Parser, Resources,
     };
+
+    use insta::assert_json_snapshot;
 
     fn new_rule() -> LuaxToLua {
         LuaxToLua::default()
     }
 
+
+    #[test]
+    fn serialize_default_rule() {
+        let rule: Box<dyn Rule> = Box::new(new_rule());
+
+        assert_json_snapshot!("default_convert_luax_to_lua", rule);
+    }
 
     #[test]    
     fn convert_from_luax() {

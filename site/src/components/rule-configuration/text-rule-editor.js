@@ -88,6 +88,7 @@ const TextRuleEditor = () => {
 
   React.useEffect(() => {
     if (defaultConfig === null) {
+      console.log(darklua.get_serialized_default_rules());
       setDefaultConfig({
         rules: json5.parse(darklua.get_serialized_default_rules()),
       })
